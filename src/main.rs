@@ -3,9 +3,23 @@
 
 use core::panic::PanicInfo;
 
+static HELLO: &[u8] = b"Hello Theta!"; //声明字节形式的字符串`Hello Theta!`
+
 #[no_mangle] // 不重整函数名
+
+///入口函数
 pub extern "C" fn _start() -> ! {
-    // 入口点函数 
+    let vga_buffer = 0xb8000 as *mut u8; //将0xb8000转化为裸指针
+
+    for (i, &byte) in HELLO.iter().enumerate() {
+        unsafe {
+            *vga_buffer.offset(i as isize * 2) = byte;
+            *vga_buffer.offset(i as isize * 2 + 1) = 0xb; //偏移指针并写入`0xb`(青色)
+
+        }
+    }
+
+    // 永不返回 
     loop {}
 }
 
