@@ -2,5 +2,13 @@
 name = "theta"
 version = "0.1.0"
 edition = "2021"
+authors = ["Qin Haolin <qhl314159265@126.com"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
 
 [dependencies]
+bootloader = "0.9"
