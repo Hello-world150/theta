@@ -5,11 +5,12 @@ use core::panic::PanicInfo;
 mod vga_buffer;
 
 static HELLO: &[u8] = b"Hello Theta!"; //声明字节形式的字符串`Hello Theta!`
+const VGA_START_POINT:u32 = 0xb8000; //VGA映射内存起点
 
 //入口函数
 #[no_mangle] //不重整函数名
 pub extern "C" fn _start() -> ! {
-    let vga_buffer = 0xb8000 as *mut u8; //将0xb8000转化为裸指针
+    let vga_buffer = VGA_START_POINT as *mut u8; //将VGA内存起点转化为裸指针
 
     for (i, &byte) in HELLO.iter().enumerate() {
         unsafe {

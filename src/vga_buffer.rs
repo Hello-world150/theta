@@ -31,6 +31,7 @@ struct ColorCode(u8); //封装单个字符颜色
 
 impl ColorCode {
     //实现new方法
+#[warn(dead_code)]
     fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
     }
@@ -84,7 +85,7 @@ impl Writer {
     fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
-                let character = self.buffer.chars[row][col].read();
+                let _character = self.buffer.chars[row][col].read();
 
             }
         }
