@@ -26,13 +26,11 @@ pub enum Colors {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现trait
-#[repr(transparent)] //使用u8相同内存布局
-struct Color(u8); //单个字符颜色
+#[repr(transparent)] //使用相同内存布局
+struct Color(u8); //文本及背景颜色
 
-#[allow(dead_code)]
 impl Color {
     fn new(foreground: Colors, background: Colors) -> Color {
-        //实现new方法
         Color((background as u8) << 4 | (foreground as u8))
     }
 }
@@ -40,16 +38,16 @@ impl Color {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现trait
 #[repr(C)] //使用C语言内存布局
 struct Char {
-    //封装单个字符
+    //单个字符
     ascii_character: u8,
     color: Color,
 }
 
 //缓冲区
 
-pub const VGA_START_POINT: u32 = 0xb8000; //VGA内存起点
-const BUFFER_HEIGHT: usize = 25; //设置缓冲区最大高度
-const BUFFER_WIDTH: usize = 80; //设置缓冲区最大宽度
+pub const VGA_START_POINT: u32 = 0xb8000; //VGA映射起点
+const BUFFER_HEIGHT: usize = 25; //缓冲区最大高度
+const BUFFER_WIDTH: usize = 80; //缓冲区最大宽度
 
 #[repr(transparent)] //使用相同内存布局
 struct Buffer {
@@ -60,17 +58,17 @@ struct Buffer {
 pub struct Writer {
     column_position: usize, //光标位置
     color: Color,
-    buffer: &'static mut Buffer, //全局有效的VGA缓冲区可变借用
+    buffer: &'static mut Buffer, //全局有效VGA缓冲区可变借用
 }
 
 impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
-        //按字节打印
+        //打印字节
         match byte {
             b'\n' => self.new_line(), //立即换行
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
-                    self.new_line(); //当光标超出缓冲区宽度换行
+                    self.new_line(); //光标超出缓冲区宽度换行
                 }
 
                 let row = BUFFER_HEIGHT - 1;
@@ -87,7 +85,7 @@ impl Writer {
     }
 
     pub fn write_string(&mut self, s: &str) {
-        //按字符串打印
+        //打印字符串
         for byte in s.bytes() {
             match byte {
                 //可打印字符或\n
@@ -107,7 +105,7 @@ impl Writer {
     }
 }
 
-//覆写内置Write宏
+//覆写Write宏
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
