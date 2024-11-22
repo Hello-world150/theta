@@ -1,10 +1,12 @@
 //实现VGA字符输出
-use core::fmt;
+use core::fmt::{self, Write};
+use lazy_static::lazy_static;
+use spin::Mutex;
 use volatile::Volatile;
 
 #[allow(dead_code)] //忽略无效代码
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现trait
-#[repr(u8)] //以u8形式存储枚举类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现`trait`
+#[repr(u8)] //以`u8`形式存储枚举类型
 
 pub enum Colors {
     Black = 0,
@@ -25,7 +27,7 @@ pub enum Colors {
     White = 15,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现trait
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现`trait`
 #[repr(transparent)] //使用相同内存布局
 struct Color(u8); //文本及背景颜色
 
@@ -35,7 +37,7 @@ impl Color {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现trait
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现`trait`
 #[repr(C)] //使用C语言内存布局
 struct Char {
     //单个字符
@@ -51,7 +53,6 @@ const BUFFER_WIDTH: usize = 80; //缓冲区最大宽度
 
 #[repr(transparent)] //使用相同内存布局
 struct Buffer {
-    //VGA缓冲区
     chars: [[Volatile<Char>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
@@ -88,7 +89,7 @@ impl Writer {
         //打印字符串
         for byte in s.bytes() {
             match byte {
-                //可打印字符或\n
+                //可打印字符或`\n`
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
                 //非可打印字符
                 _ => self.write_byte(0xfe),
@@ -96,16 +97,28 @@ impl Writer {
         }
     }
 
+    fn clear_row(&mut self, row: usize) {
+        let blank = Char {
+            ascii_character: b' ',
+            color: self.color,
+        };
+        for col in 0..BUFFER_WIDTH {
+            self.buffer.chars[row][col].write(blank);
+        }
+    }
+
     fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
-                let _character = self.buffer.chars[row][col].read();
+                let character = self.buffer.chars[row][col].read();
+                self.buffer.chars[row - 1][col].write(character);
             }
         }
+        self.clear_row(BUFFER_HEIGHT - 1);
+        self.column_position = 0;
     }
 }
 
-//覆写Write宏
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
@@ -113,15 +126,34 @@ impl fmt::Write for Writer {
     }
 }
 
-pub fn print_something() {
-    use core::fmt::Write;
-    let mut writer = Writer {
+//延迟初始化`Writer`实例
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         column_position: 0,
         color: Color::new(Colors::Yellow, Colors::Black),
         buffer: unsafe { &mut *(VGA_START_POINT as *mut Buffer) },
-    };
+    });
+}
 
-    writer.write_byte(b'H');
-    writer.write_string("ello! ");
-    write!(writer, "The numbers are {} and {}", 42, 1.0 / 3.0).unwrap();
+//`print`宏
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        $crate::vga_buffer::_print(format_args!($($arg)*));
+    };
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {
+        $crate::print!("\n")
+    };
+    ($($arg:tt)*) => {
+        $crate::print!("{}\n", format_args!($($arg)*));
+    };
+}
+
+#[doc(hidden)] //隐藏实现细节
+pub fn _print(args: fmt::Arguments) {
+    WRITER.lock().write_fmt(args).unwrap();
 }

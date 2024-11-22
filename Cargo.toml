@@ -2,7 +2,7 @@
 name = "theta"
 version = "0.1.0"
 edition = "2021"
-authors = ["Qin Haolin <qhl314159265@126.com"]
+authors = ["Haolin Qin <qhl314159265@126.com>"]
 
 [profile.dev]
 panic = "abort"
@@ -13,3 +13,8 @@ panic = "abort"
 [dependencies]
 bootloader = "0.9"
 volatile = "0.3"
+spin = "0.9"
+
+[dependencies.lazy_static]
+version = "1.0"
+features = ["spin_no_std"]

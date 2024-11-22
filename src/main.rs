@@ -3,13 +3,12 @@
 
 use core::panic::PanicInfo;
 
-use vga_buffer::print_something;
 mod vga_buffer;
 
 //入口函数
 #[no_mangle] //不重整函数名
 pub extern "C" fn _start() -> ! {
-    print_something();
+    println!("To you{}", ",Yan");
     //永不返回
     loop {}
 }
