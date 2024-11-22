@@ -1,12 +1,12 @@
-//实现VGA字符输出
+// Type: VGA缓冲区
 use core::fmt::{self, Write};
 use lazy_static::lazy_static;
 use spin::Mutex;
 use volatile::Volatile;
 
-#[allow(dead_code)] //忽略无效代码
+#[allow(dead_code)] //忽略未使用代码警告
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现`trait`
-#[repr(u8)] //以`u8`形式存储枚举类型
+#[repr(u8)] //使用u8表示
 
 pub enum Colors {
     Black = 0,
@@ -29,7 +29,7 @@ pub enum Colors {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现`trait`
 #[repr(transparent)] //使用相同内存布局
-struct Color(u8); //文本及背景颜色
+struct Color(u8); //颜色结构体
 
 impl Color {
     fn new(foreground: Colors, background: Colors) -> Color {
@@ -37,17 +37,16 @@ impl Color {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)] //自动实现`trait`
-#[repr(C)] //使用C语言内存布局
+#[derive(Debug, Clone, Copy, PartialEq, Eq)] //字符结构体
+#[repr(C)] //C语言风格
 struct Char {
-    //单个字符
-    ascii_character: u8,
-    color: Color,
+    ascii_character: u8, //ASCII字符
+    color: Color, //颜色
 }
 
 //缓冲区
 
-pub const VGA_START_POINT: u32 = 0xb8000; //VGA映射起点
+pub const VGA_START_POINT: u32 = 0xb8000; //VGA缓冲区起始地址
 const BUFFER_HEIGHT: usize = 25; //缓冲区最大高度
 const BUFFER_WIDTH: usize = 80; //缓冲区最大宽度
 
@@ -59,22 +58,21 @@ struct Buffer {
 pub struct Writer {
     column_position: usize, //光标位置
     color: Color,
-    buffer: &'static mut Buffer, //全局有效VGA缓冲区可变借用
+    buffer: &'static mut Buffer, //缓冲区
 }
 
 impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
         //打印字节
         match byte {
-            b'\n' => self.new_line(), //立即换行
+            b'\n' => self.new_line(),
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
-                    self.new_line(); //光标超出缓冲区宽度换行
+                    self.new_line(); 
                 }
 
                 let row = BUFFER_HEIGHT - 1;
-                let column = self.column_position; //更新光标位置
-
+                let column = self.column_position; //光标位置
                 let color = self.color;
                 self.buffer.chars[row][column].write(Char {
                     ascii_character: byte,
@@ -89,21 +87,21 @@ impl Writer {
         //打印字符串
         for byte in s.bytes() {
             match byte {
-                //可打印字符或`\n`
+                //ascii可打印字符
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
-                //非可打印字符
+                //不可打印字符
                 _ => self.write_byte(0xfe),
             }
         }
     }
 
-    fn clear_row(&mut self, row: usize) {
+    fn clear_row(&mut self, row: usize) { //清空行
         let blank = Char {
             ascii_character: b' ',
             color: self.color,
         };
-        for col in 0..BUFFER_WIDTH {
-            self.buffer.chars[row][col].write(blank);
+        for col in 0..BUFFER_WIDTH { //遍历每一列
+            self.buffer.chars[row][col].write(blank); //写入空白字符
         }
     }
 
@@ -119,23 +117,22 @@ impl Writer {
     }
 }
 
-impl fmt::Write for Writer {
+impl fmt::Write for Writer { //实现`Write` trait
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
     }
 }
 
-//延迟初始化`Writer`实例
-lazy_static! {
-    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+lazy_static! { //懒加载
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer { //全局变量
         column_position: 0,
         color: Color::new(Colors::Yellow, Colors::Black),
-        buffer: unsafe { &mut *(VGA_START_POINT as *mut Buffer) },
+        buffer: unsafe { &mut *(VGA_START_POINT as *mut Buffer) }, //缓冲区
     });
 }
 
-//`print`宏
+//打印
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
@@ -153,7 +150,7 @@ macro_rules! println {
     };
 }
 
-#[doc(hidden)] //隐藏实现细节
+#[doc(hidden)] //隐藏文档
 pub fn _print(args: fmt::Arguments) {
     WRITER.lock().write_fmt(args).unwrap();
 }
