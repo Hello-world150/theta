@@ -41,7 +41,7 @@ impl Color {
 #[repr(C)] //C语言风格
 struct Char {
     ascii_character: u8, //ASCII字符
-    color: Color, //颜色
+    color: Color,        //颜色
 }
 
 //缓冲区
@@ -68,7 +68,7 @@ impl Writer {
             b'\n' => self.new_line(),
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
-                    self.new_line(); 
+                    self.new_line();
                 }
 
                 let row = BUFFER_HEIGHT - 1;
@@ -95,12 +95,14 @@ impl Writer {
         }
     }
 
-    fn clear_row(&mut self, row: usize) { //清空行
+    fn clear_row(&mut self, row: usize) {
+        //清空行
         let blank = Char {
             ascii_character: b' ',
             color: self.color,
         };
-        for col in 0..BUFFER_WIDTH { //遍历每一列
+        for col in 0..BUFFER_WIDTH {
+            //遍历每一列
             self.buffer.chars[row][col].write(blank); //写入空白字符
         }
     }
@@ -117,7 +119,8 @@ impl Writer {
     }
 }
 
-impl fmt::Write for Writer { //实现`Write` trait
+impl fmt::Write for Writer {
+    //实现`Write` trait
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
