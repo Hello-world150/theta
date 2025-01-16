@@ -2,17 +2,15 @@ use ::spin::Mutex;
 use lazy_static::lazy_static;
 use uart_16550::SerialPort;
 
-//使用时调用
 lazy_static! {
     pub static ref SERIAL1: Mutex<SerialPort> = {
-        let mut serial_port = unsafe {SerialPort::new(0x3F8)}; // 0x3F8是COM的标准起始端口号
-        // 自动计算所有串口号，初始化串口
+        let mut serial_port = unsafe {SerialPort::new(0x3F8)}; // `0x3F8` is the number of COM0
+        // Auto copute all number and init them
         serial_port.init();
         Mutex::new(serial_port)
     };
 }
 
-//内部调用，不对外暴露
 #[doc(hidden)]
 pub fn _print(args: ::core::fmt::Arguments) {
     use core::fmt::Write;
@@ -22,7 +20,7 @@ pub fn _print(args: ::core::fmt::Arguments) {
         .expect("Printing to serial failed");
 }
 
-//通过串口打印
+//Printing through serial
 #[macro_export]
 macro_rules! serial_print {
     ($($arg:tt)*) => {
@@ -30,7 +28,7 @@ macro_rules! serial_print {
     };
 }
 
-//通过串口打印并换行
+//Printing through serial and new line
 #[macro_export]
 macro_rules! serial_println {
     () => {

@@ -1,20 +1,21 @@
-#![no_std] //禁用Rust标准库
-#![no_main] //禁用Rust入口函数
-#![feature(custom_test_frameworks)] //启用自定义测试框架
-#![test_runner(crate::test_runner)] //指定测试运行器
-#![reexport_test_harness_main = "test_main"] //指定测试入口函数
+#![no_std]
+#![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
 
 mod serial;
 mod vga_buffer;
 
-
 pub trait Testable {
-    fn run(&self) -> ();
+    fn run(&self);
 }
-impl <T> Testable for T
-    where T: Fn() {
+impl<T> Testable for T
+where
+    T: Fn(),
+{
     fn run(&self) {
         serial_print!("{}...\t", core::any::type_name::<T>());
         self();
@@ -22,8 +23,8 @@ impl <T> Testable for T
     }
 }
 
+//Test runner, needs a piece of functions
 #[cfg(test)]
-//测试运行器，接受一个测试函数的切片
 pub fn test_runner(tests: &[&dyn Testable]) {
     serial_println!("Running {} tests", tests.len());
     for test in tests {
@@ -32,25 +33,24 @@ pub fn test_runner(tests: &[&dyn Testable]) {
     exit_qemu(QemuExitCode::Success);
 }
 
-//panic处理函数
+//`panic` function
 #[cfg(not(test))]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    println!("{}", _info);
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
     loop {}
 }
 
 #[cfg(test)]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
     serial_println!("[failed]");
-    serial_println!("Error: {}", _info);
+    serial_println!("Error: {}", info);
     exit_qemu(QemuExitCode::Failed);
     loop {}
 }
 
-
-//退出QEMU
+//Exit QEMU
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
 pub enum QemuExitCode {
@@ -67,9 +67,8 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
-
-//入口函数
-#[no_mangle] //不重整
+//Start function
+#[no_mangle]
 pub extern "C" fn _start() -> ! {
     println!("Hello Theta!");
 
