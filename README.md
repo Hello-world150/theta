@@ -1,1 +1,1 @@
-#### Theta OS -- A mini kernel for studying
+# Theta Kernel -- A mini kernel for studying
