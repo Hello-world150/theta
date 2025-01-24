@@ -4,20 +4,21 @@
 #![test_runner(theta::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use theta::println;
-mod panic_handler;
-
-//入口函数
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    theta::test_panic_handler(info);
+}
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
-    println!("Hello Theta!");
-
-    theta::init();
-    x86_64::instructions::interrupts::int3();
-
-    #[cfg(test)]
     test_main();
 
-    println!("Did not panic!");
     loop {}
+}
+
+use theta::println;
+#[test_case]
+fn print() {
+    for i in 1..=1000000 {
+        println!("Hello, {}!", i);
+    }
 }

@@ -60,7 +60,7 @@ pub struct Writer {
     buffer: &'static mut Buffer,
 }
 
-//Some simple impletions to print char
+//Some simple implementations to print char
 impl Writer {
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
@@ -85,9 +85,9 @@ impl Writer {
     pub fn write_string(&mut self, s: &str) {
         for byte in s.bytes() {
             match byte {
-                //Printable char (ASCII)
+                //可打印字符
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
-                //Imprintable char
+                //不可打印字符
                 _ => self.write_byte(0xfe),
             }
         }
@@ -115,8 +115,7 @@ impl Writer {
     }
 }
 
-impl fmt::Write for Writer {
-    //Impl `Write` trait
+impl Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write_string(s);
         Ok(())
@@ -126,7 +125,7 @@ impl fmt::Write for Writer {
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer { //全局变量
         column_position: 0,
-        color: Color::new(Colors::Yellow, Colors::Black),
+        color: Color::new(Colors::LightGreen, Colors::Black),
         buffer: unsafe { &mut *(VGA_START_POINT as *mut Buffer) }, //缓冲区
     });
 }

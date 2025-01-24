@@ -24,4 +24,4 @@ features = ["spin_no_std"]
 [package.metadata.bootimage]
 test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-serial", "stdio", "-display", "none"]
 test-success-exit-code = 33 # (0x10 << 1) | 1
-test-timeout = 30 # 启动失败超时时间
+test-timeout = 180 # 测试超时时间（秒）
