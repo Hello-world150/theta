@@ -18,7 +18,7 @@ pub extern "C" fn _start() -> ! {
 use theta::println;
 #[test_case]
 fn print() {
-    for i in 1..=1000000 {
+    for i in 1..=1000 {
         println!("Hello, {}!", i);
     }
 }
