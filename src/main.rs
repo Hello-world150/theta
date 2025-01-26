@@ -13,7 +13,12 @@ pub extern "C" fn _start() -> ! {
     println!("Hello Theta!");
 
     theta::init();
-    x86_64::instructions::interrupts::int3();
+
+    #[allow(unconditional_recursion)]
+    fn stack_overflow() {
+        stack_overflow();
+    }
+    stack_overflow();
 
     #[cfg(test)]
     test_main();

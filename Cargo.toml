@@ -10,6 +10,10 @@ authors = ["Haolin Qin <qhl314159265@126.com>"]
 [profile.release]
 #panic = "abort"
 
+[[test]]
+name = "stack_overflow"
+harness = false
+
 [dependencies]
 bootloader = "0.9"
 volatile = "0.3"
