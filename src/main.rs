@@ -4,7 +4,7 @@
 #![test_runner(theta::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use theta::println;
+use theta::{hlt_loop, println};
 mod panic_handler;
 
 //入口函数
@@ -14,15 +14,13 @@ pub extern "C" fn _start() -> ! {
 
     theta::init();
 
-    #[allow(unconditional_recursion)]
-    fn stack_overflow() {
-        stack_overflow();
+    let ptr = 0xdeadbeaf as *mut u8;
+    unsafe {
+        *ptr = 42;
     }
-    stack_overflow();
 
     #[cfg(test)]
     test_main();
 
-    println!("Did not panic!");
-    loop {}
+    hlt_loop();
 }

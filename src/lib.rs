@@ -10,6 +10,12 @@ pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
 
+pub fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
+
 //关于QEMU的实现
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -54,7 +60,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("[failed]\n");
     serial_println!("Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    hlt_loop();
 }
 
 //符合Rust恐慌处理函数签名的封装
@@ -68,6 +74,10 @@ fn panic(info: &PanicInfo) -> ! {
 pub fn init() {
     gdt::init(); //初始化全局描述符表
     interrupts::init_idt(); //初始化中断描述符表
+    unsafe {
+        interrupts::PICS.lock().initialize();
+    }
+    x86_64::instructions::interrupts::enable();
 }
 
 //入口函数
@@ -76,5 +86,5 @@ pub fn init() {
 pub extern "C" fn _start() -> ! {
     init();
     test_main(); //进行测试
-    loop {}
+    hlt_loop();
 }

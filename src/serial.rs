@@ -18,6 +18,13 @@ pub fn _print(args: ::core::fmt::Arguments) {
         .lock()
         .write_fmt(args)
         .expect("Printing to serial failed");
+
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        SERIAL1
+            .lock()
+            .write_fmt(args)
+            .expect("Printing to serial failed");
+    });
 }
 
 //Printing through serial

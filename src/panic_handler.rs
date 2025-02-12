@@ -4,7 +4,7 @@ use core::panic::PanicInfo;
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     crate::println!("{}", info);
-    loop {}
+    theta::hlt_loop();
 }
 
 #[cfg(test)]
